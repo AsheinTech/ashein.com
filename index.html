@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cyberspace Login Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyberspace Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -31,147 +30,85 @@
       transition: opacity 1s ease;
     }
 
-    #login-box {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 255, 255, 0.05);
-      border: 2px solid cyan;
-      border-radius: 12px;
-      padding: 30px;
-      width: 300px;
-      text-align: center;
-      font-family: 'Orbitron', sans-serif;
-      box-shadow: 0 0 20px cyan, 0 0 40px cyan inset;
-      display: none;
-      z-index: 9;
-    }
-
-    #login-box input,
-    #login-box button {
-      width: 90%;
-      padding: 10px;
-      margin: 10px 0;
-      font-family: 'Orbitron', sans-serif;
-      border-radius: 5px;
-      text-align: center;
-    }
-
-    #login-box input {
-      background: rgba(0, 255, 255, 0.1);
-      color: cyan;
-      border: 1px solid cyan;
-    }
-
-    #login-box button {
-      background: cyan;
-      color: black;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
     canvas {
       display: block;
+      pointer-events: none;
       position: fixed;
       top: 0;
       left: 0;
       z-index: 0;
-      pointer-events: none;
     }
   </style>
 </head>
 <body>
   <div id="enter">ENTER THE PORTAL</div>
-
-  <div id="login-box">
-    <h2 style="color: cyan;">LOGIN</h2>
-    <input type="email" id="email" placeholder="Email" /><br/>
-    <input type="password" id="password" placeholder="Password" /><br/>
-    <button onclick="login()">Access</button>
-    <p id="error" style="color:red"></p>
-  </div>
-
-  <audio id="portal-sound" src="https://assets.mixkit.co/sfx/download/mixkit-arcade-retro-game-over-213.wav"></audio>
+  <audio id="portal-sound" src="https://assets.mixkit.co/sfx/download/mixkit-arcade-retro-game-over-213.wav" preload="auto"></audio>
   <canvas id="bg"></canvas>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
   <script>
-    // Supabase setup
-    const supabase = supabase.createClient(
-      'https://gwraaxzunyibwvbrefji.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3cmFheHp1bnlpYnd2YnJlZmppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMDM0MTksImV4cCI6MjA2NjY3OTQxOX0.JCFCIWlu96e24ln2TY9RnaPcyI_WE-6rM0DhLmKqr-4'
-    );
+    const canvas = document.getElementById('bg');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    const renderer = new THREE.WebGLRenderer({ canvas });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.position.z = 2;
 
-    async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const geometry = new THREE.PlaneGeometry(2, 2);
 
-      if (error) {
-        document.getElementById("error").innerText = error.message;
-      } else {
-        window.location.href = "dashboard.html";
+    const vertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
+    `;
+
+    const fragmentShader = `
+      uniform float uTime;
+      varying vec2 vUv;
+
+      void main() {
+        vec2 uv = vUv - 0.5;
+        float r = length(uv);
+        float wave = sin(10.0 * r - uTime * 2.0);
+        float glow = smoothstep(0.5, 0.0, abs(wave));
+        vec3 color = vec3(0.0, glow, glow * 1.5); // cyber blue glow
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `;
+
+    const uniforms = { uTime: { value: 0.0 } };
+
+    const material = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader,
+      uniforms
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function animate(time) {
+      uniforms.uTime.value = time * 0.001;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
     }
 
-    // Animation
-    window.addEventListener('DOMContentLoaded', () => {
-      const canvas = document.getElementById('bg');
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer({ canvas });
+    document.getElementById('enter').addEventListener('click', () => {
+      const btn = document.getElementById('enter');
+      const sound = document.getElementById('portal-sound');
+      btn.style.opacity = 0;
+      setTimeout(() => btn.style.display = 'none', 1000);
+      sound.play();
+      animate();
+    });
+
+    window.addEventListener('resize', () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.position.z = 5;
-
-      const geometry = new THREE.PlaneGeometry(2, 2);
-      const vertexShader = `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `;
-      const fragmentShader = `
-        uniform float uTime;
-        varying vec2 vUv;
-        void main() {
-          vec2 uv = vUv - 0.5;
-          float r = length(uv);
-          float wave = sin(10.0 * r - uTime * 2.0);
-          float glow = smoothstep(0.5, 0.0, abs(wave));
-          vec3 color = vec3(0.0, glow, glow * 1.5);
-          gl_FragColor = vec4(color, 1.0);
-        }
-      `;
-      const uniforms = { uTime: { value: 0.0 } };
-      const material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
-      const mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
-
-      function animate(time) {
-        uniforms.uTime.value = time * 0.001;
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-      }
-
-      document.getElementById('enter').addEventListener('click', () => {
-        document.getElementById('portal-sound').play();
-        document.getElementById('enter').style.display = 'none';
-        document.getElementById('login-box').style.display = 'block';
-        animate();
-      });
-
-      window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-      });
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
     });
   </script>
 </body>
-    </html>
+</html>
