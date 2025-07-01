@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cyberspace Login Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       margin: 0;
@@ -47,7 +48,8 @@
       z-index: 9;
     }
 
-    #login-box input, #login-box button {
+    #login-box input,
+    #login-box button {
       width: 90%;
       padding: 10px;
       margin: 10px 0;
@@ -71,29 +73,53 @@
     }
 
     canvas {
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 0;
-  pointer-events: none;
-      };
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
   <div id="enter">ENTER THE PORTAL</div>
+
   <div id="login-box">
     <h2 style="color: cyan;">LOGIN</h2>
-    <input type="email" placeholder="Email" /><br/>
-    <input type="password" placeholder="Password" /><br/>
-    <button onclick="alert('Login feature coming soon')">Access</button>
+    <input type="email" id="email" placeholder="Email" /><br/>
+    <input type="password" id="password" placeholder="Password" /><br/>
+    <button onclick="login()">Access</button>
+    <p id="error" style="color:red"></p>
   </div>
+
   <audio id="portal-sound" src="https://assets.mixkit.co/sfx/download/mixkit-arcade-retro-game-over-213.wav"></audio>
   <canvas id="bg"></canvas>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
   <script>
+    // Supabase setup
+    const supabase = supabase.createClient(
+      'https://gwraaxzunyibwvbrefji.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3cmFheHp1bnlpYnd2YnJlZmppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMDM0MTksImV4cCI6MjA2NjY3OTQxOX0.JCFCIWlu96e24ln2TY9RnaPcyI_WE-6rM0DhLmKqr-4'
+    );
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        document.getElementById("error").innerText = error.message;
+      } else {
+        window.location.href = "dashboard.html";
+      }
+    }
+
+    // Animation
     window.addEventListener('DOMContentLoaded', () => {
       const canvas = document.getElementById('bg');
       const scene = new THREE.Scene();
@@ -133,7 +159,6 @@
         requestAnimationFrame(animate);
       }
 
-      // On ENTER click
       document.getElementById('enter').addEventListener('click', () => {
         document.getElementById('portal-sound').play();
         document.getElementById('enter').style.display = 'none';
