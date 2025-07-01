@@ -45,8 +45,12 @@
   <audio id="portal-sound" src="https://assets.mixkit.co/sfx/download/mixkit-arcade-retro-game-over-213.wav" preload="auto"></audio>
   <canvas id="bg"></canvas>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
-  <script>
+  <!-- Load Three.js FIRST -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
+
+<!-- Then your custom script -->
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('bg');
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -73,19 +77,13 @@
         float r = length(uv);
         float wave = sin(10.0 * r - uTime * 2.0);
         float glow = smoothstep(0.5, 0.0, abs(wave));
-        vec3 color = vec3(0.0, glow, glow * 1.5); // cyber blue glow
+        vec3 color = vec3(0.0, glow, glow * 1.5);
         gl_FragColor = vec4(color, 1.0);
       }
     `;
 
     const uniforms = { uTime: { value: 0.0 } };
-
-    const material = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms
-    });
-
+    const material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
@@ -109,6 +107,7 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
     });
-  </script>
+  });
+</script>
 </body>
 </html>
