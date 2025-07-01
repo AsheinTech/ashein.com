@@ -1,13 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cyberspace Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
-
-  <style>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />  <style>
     body {
       margin: 0;
       overflow: hidden;
@@ -32,6 +29,25 @@
       transition: opacity 1s ease;
     }
 
+    #loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      border: 8px solid rgba(0, 255, 255, 0.2);
+      border-top: 8px solid cyan;
+      border-radius: 50%;
+      animation: spin 2s linear infinite;
+      z-index: 9;
+    }
+
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
     canvas {
       display: block;
       position: fixed;
@@ -39,71 +55,51 @@
       left: 0;
       z-index: 0;
     }
-  </style>
-
-  <!-- ✅ Load Three.js from jsDelivr with defer -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js" defer></script>
-
-  <!-- ✅ Your custom script after three.js, with defer -->
-  <script defer>
+  </style>  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js" defer></script>  <script defer>
     window.addEventListener("DOMContentLoaded", () => {
       const canvas = document.getElementById('bg');
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
       const renderer = new THREE.WebGLRenderer({ canvas });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.position.z = 2;
+      camera.position.z = 5;
 
-      const geometry = new THREE.PlaneGeometry(2, 2);
+      const rings = [];
+      const ringCount = 40;
 
-      const vertexShader = `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `;
+      for (let i = 0; i < ringCount; i++) {
+        const geometry = new THREE.TorusGeometry(2, 0.05, 16, 100);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        const ring = new THREE.Mesh(geometry, material);
+        ring.position.z = -i * 2;
+        ring.rotation.x = Math.PI / 2;
+        scene.add(ring);
+        rings.push(ring);
+      }
 
-      const fragmentShader = `
-        uniform float uTime;
-        varying vec2 vUv;
-        void main() {
-          vec2 uv = vUv - 0.5;
-          float r = length(uv);
-          float wave = sin(10.0 * r - uTime * 2.0);
-          float glow = smoothstep(0.5, 0.0, abs(wave));
-          vec3 color = vec3(0.0, glow, glow * 1.5);
-          gl_FragColor = vec4(color, 1.0);
-        }
-      `;
+      function animate() {
+        rings.forEach((ring) => {
+          ring.position.z += 0.2;
+          if (ring.position.z > 5) ring.position.z = -ringCount * 2;
+        });
 
-      const uniforms = {
-        uTime: { value: 0.0 }
-      };
-
-      const material = new THREE.ShaderMaterial({
-        vertexShader,
-        fragmentShader,
-        uniforms
-      });
-
-      const mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
-
-      function animate(time) {
-        uniforms.uTime.value = time * 0.001;
         renderer.render(scene, camera);
         requestAnimationFrame(animate);
       }
 
       const enterBtn = document.getElementById('enter');
       const sound = document.getElementById('portal-sound');
+      const loader = document.getElementById('loader');
 
       enterBtn.addEventListener('click', () => {
         enterBtn.style.opacity = 0;
-        setTimeout(() => enterBtn.style.display = 'none', 1000);
-        sound.play();
-        animate();
+        loader.style.display = 'block';
+        setTimeout(() => {
+          enterBtn.style.display = 'none';
+          loader.style.display = 'none';
+          sound.play();
+          animate();
+        }, 2000);
       });
 
       window.addEventListener('resize', () => {
@@ -112,16 +108,14 @@
         camera.updateProjectionMatrix();
       });
     });
-  </script>
-</head>
-
-<body>
+  </script></head><body>
   <div id="enter">ENTER THE PORTAL</div>
+  <div id="loader" style="display:none;"></div>
   <audio id="portal-sound" preload="auto">
-  <source src="Dean_Lewis_-_With_You.mp3" type="audio/mpeg">
-  <source src="sound.ogg" type="audio/ogg">
-  <source src="sound.wav" type="audio/wav">
-  Your browser does not support the audio tag.
+    <source src="Dean_Lewis_-_With_You.mp3" type="audio/mpeg">
+    <source src="sound.ogg" type="audio/ogg">
+    <source src="sound.wav" type="audio/wav">
+    Your browser does not support the audio tag.
   </audio>
   <canvas id="bg"></canvas>
 </body>
