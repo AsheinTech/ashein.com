@@ -47,28 +47,27 @@
       z-index: 9;
     }
 
-    #login-box input {
+    #login-box input, #login-box button {
       width: 90%;
       padding: 10px;
       margin: 10px 0;
-      border: 1px solid cyan;
-      background: rgba(0, 255, 255, 0.05);
-      color: cyan;
-      outline: none;
       font-family: 'Orbitron', sans-serif;
-      text-align: center;
       border-radius: 5px;
+      text-align: center;
+    }
+
+    #login-box input {
+      background: rgba(0, 255, 255, 0.1);
+      color: cyan;
+      border: 1px solid cyan;
     }
 
     #login-box button {
-      margin-top: 10px;
-      padding: 10px 20px;
       background: cyan;
       color: black;
       border: none;
-      font-weight: bold;
       cursor: pointer;
-      border-radius: 5px;
+      font-weight: bold;
     }
 
     canvas {
@@ -89,92 +88,58 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
   <script>
-    const canvas = document.getElementById('bg');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.position.z = 5;
+    window.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('bg');
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.position.z = 5;
 
-    // Shader plane
-    const planeGeometry = new THREE.PlaneGeometry(2, 2);
-    const vertexShader = `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      const vertexShader = `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `;
+      const fragmentShader = `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          vec2 uv = vUv - 0.5;
+          float r = length(uv);
+          float wave = sin(10.0 * r - uTime * 2.0);
+          float glow = smoothstep(0.5, 0.0, abs(wave));
+          vec3 color = vec3(0.0, glow, glow * 1.5);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
+      const uniforms = { uTime: { value: 0.0 } };
+      const material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      function animate(time) {
+        uniforms.uTime.value = time * 0.001;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
       }
-    `;
-    const fragmentShader = `
-      uniform float uTime;
-      varying vec2 vUv;
-      void main() {
-        vec2 uv = vUv - 0.5;
-        float r = length(uv);
-        float wave = sin(10.0 * r - uTime * 2.0);
-        float glow = smoothstep(0.5, 0.0, abs(wave));
-        vec3 color = vec3(0.0, glow, glow * 1.5);
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `;
-    const uniforms = { uTime: { value: 0.0 } };
-    const shaderMaterial = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
-    const shaderMesh = new THREE.Mesh(planeGeometry, shaderMaterial);
-    scene.add(shaderMesh);
 
-    // Portal ring
-    const ringGeometry = new THREE.RingGeometry(1.5, 1.8, 64);
-    const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, wireframe: true });
-    const portalRing = new THREE.Mesh(ringGeometry, ringMaterial);
-    portalRing.rotation.x = Math.PI / 2;
-    scene.add(portalRing);
-
-    // Stars
-    const stars = [];
-    const starGeometry = new THREE.SphereGeometry(0.01, 8, 8);
-    const starMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-    for (let i = 0; i < 200; i++) {
-      const star = new THREE.Mesh(starGeometry, starMaterial);
-      star.position.set(
-        (Math.random() - 0.5) * 30,
-        (Math.random() - 0.5) * 30,
-        (Math.random() - 0.5) * 30
-      );
-      scene.add(star);
-      stars.push(star);
-    }
-
-    function animate(time) {
-      uniforms.uTime.value = time * 0.001;
-      portalRing.rotation.z += 0.005;
-      portalRing.rotation.y += 0.003;
-
-      stars.forEach(star => {
-        star.position.z += 0.02;
-        if (star.position.z > 15) star.position.z = -15;
+      // On ENTER click
+      document.getElementById('enter').addEventListener('click', () => {
+        document.getElementById('portal-sound').play();
+        document.getElementById('enter').style.display = 'none';
+        document.getElementById('login-box').style.display = 'block';
+        animate();
       });
 
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-
-    document.getElementById('enter').addEventListener('click', () => {
-      const btn = document.getElementById('enter');
-      const login = document.getElementById('login-box');
-      const sound = document.getElementById('portal-sound');
-
-      btn.style.opacity = 0;
-      setTimeout(() => btn.style.display = 'none', 1000);
-
-      sound.play();
-      login.style.display = 'block';
-      animate();
-    });
-
-    window.addEventListener('resize', () => {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+      window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+      });
     });
   </script>
 </body>
