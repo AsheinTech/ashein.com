@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cyberspace Portal</title>
+  <title>Asheinspace Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />  <style>
     body {
@@ -64,12 +64,24 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.position.z = 5;
 
+      scene.fog = new THREE.Fog(0x000000, 1, 30);
+
+      const light = new THREE.PointLight(0x00ffff, 2, 100);
+      light.position.set(0, 0, 5);
+      scene.add(light);
+
       const rings = [];
       const ringCount = 40;
 
       for (let i = 0; i < ringCount; i++) {
-        const geometry = new THREE.TorusGeometry(2, 0.05, 16, 100);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        const geometry = new THREE.TorusGeometry(2, 0.08, 16, 100);
+        const material = new THREE.MeshStandardMaterial({
+          color: 0x00ffff,
+          emissive: 0x00ffff,
+          emissiveIntensity: 2,
+          metalness: 0.3,
+          roughness: 0.2
+        });
         const ring = new THREE.Mesh(geometry, material);
         ring.position.z = -i * 2;
         ring.rotation.x = Math.PI / 2;
@@ -108,8 +120,9 @@
         camera.updateProjectionMatrix();
       });
     });
-  </script></head><body>
-  <div id="enter">ENTER THE PORTAL</div>
+  </script></head>
+<body>
+  <div id="enter">ENTER Ashein PORTAL</div>
   <div id="loader" style="display:none;"></div>
   <audio id="portal-sound" preload="auto">
     <source src="Dean_Lewis_-_With_You.mp3" type="audio/mpeg">
@@ -119,4 +132,4 @@
   </audio>
   <canvas id="bg"></canvas>
 </body>
-  </html>
+    </html
