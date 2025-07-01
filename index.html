@@ -1,70 +1,81 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cyberspace Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
   <style>
     body {
       margin: 0;
       overflow: hidden;
       background: black;
-    }#enter {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 20px 40px;
-  background: rgba(0, 255, 255, 0.1);
-  border: 2px solid cyan;
-  color: cyan;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.5rem;
-  cursor: pointer;
-  z-index: 10;
-  text-shadow: 0 0 5px cyan, 0 0 10px cyan;
-  letter-spacing: 2px;
-  transition: opacity 1s ease;
-}
+    }
 
-#loader {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100px;
-  height: 100px;
-  border: 8px solid rgba(0, 255, 255, 0.2);
-  border-top: 8px solid cyan;
-  border-radius: 50%;
-  animation: spin 2s linear infinite;
-  z-index: 9;
-}
+    #enter {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px 40px;
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid cyan;
+      color: cyan;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 10;
+      text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+      letter-spacing: 2px;
+      transition: opacity 1s ease;
+    }
 
-@keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
+    #loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      border: 8px solid rgba(0, 255, 255, 0.2);
+      border-top: 8px solid cyan;
+      border-radius: 50%;
+      animation: spin 2s linear infinite;
+      z-index: 9;
+      display: none;
+    }
 
-canvas {
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 0;
-}
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
 
-    <script type="module" src="main.js"></script>
-    <canvas id="bg"></canvas>
+    canvas {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="bg"></canvas>
+
   <div id="enter">ENTER THE PORTAL</div>
-  <div id="loader" style="display:none;"></div>
+  <div id="loader"></div>
+
   <audio id="portal-sound" preload="auto">
     <source src="Dean_Lewis_-_With_You.mp3" type="audio/mpeg">
     <source src="sound.ogg" type="audio/ogg">
     <source src="sound.wav" type="audio/wav">
     Your browser does not support the audio tag.
   </audio>
-  <canvas id="bg"></canvas>
+
+  <!-- ✅ Correct script placement -->
+  <script type="module" src="main.js"></script>
 </body>
-</html>
+      </html>
