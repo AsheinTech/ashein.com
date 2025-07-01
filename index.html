@@ -2,55 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Glowing Sphere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cyberspace Login Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      background: black;
       overflow: hidden;
+      background: black;
     }
+
+    #enter {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px 40px;
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid cyan;
+      color: cyan;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 10;
+      text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+      letter-spacing: 2px;
+      transition: opacity 1s ease;
+    }
+
+    #login-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 255, 255, 0.05);
+      border: 2px solid cyan;
+      border-radius: 12px;
+      padding: 30px;
+      width: 300px;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      box-shadow: 0 0 20px cyan, 0 0 40px cyan inset;
+      display: none;
+      z-index: 9;
+    }
+
+    #login-box input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid cyan;
+      background: rgba(0, 255, 255, 0.05);
+      color: cyan;
+      outline: none;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      border-radius: 5px;
+    }
+
+    #login-box button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: cyan;
+      color: black;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
     canvas {
       display: block;
     }
   </style>
 </head>
 <body>
+  <div id="enter">ENTER THE PORTAL</div>
+  <div id="login-box">
+    <h2 style="color: cyan;">LOGIN</h2>
+    <input type="email" placeholder="Email" /><br/>
+    <input type="password" placeholder="Password" /><br/>
+    <button onclick="alert('Login feature coming soon')">Access</button>
+  </div>
+  <audio id="portal-sound" src="https://assets.mixkit.co/sfx/download/mixkit-arcade-retro-game-over-213.wav"></audio>
+  <canvas id="bg"></canvas>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
   <script>
+    const canvas = document.getElementById('bg');
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // Create geometry and material
-    const geometry = new THREE.SphereGeometry(2, 64, 64);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x00ffff,
-      wireframe: true
-    });
-
-    const sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
-
     camera.position.z = 5;
 
-    // Animation loop
-    function animate() {
-      requestAnimationFrame(animate);
-      sphere.rotation.x += 0.01;
-      sphere.rotation.y += 0.01;
-      renderer.render(scene, camera);
+    // Shader plane
+    const planeGeometry = new THREE.PlaneGeometry(2, 2);
+    const vertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+    const fragmentShader = `
+      uniform float uTime;
+      varying vec2 vUv;
+      void main() {
+        vec2 uv = vUv - 0.5;
+        float r = length(uv);
+        float wave = sin(10.0 * r - uTime * 2.0);
+        float glow = smoothstep(0.5, 0.0, abs(wave));
+        vec3 color = vec3(0.0, glow, glow * 1.5);
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `;
+    const uniforms = { uTime: { value: 0.0 } };
+    const shaderMaterial = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
+    const shaderMesh = new THREE.Mesh(planeGeometry, shaderMaterial);
+    scene.add(shaderMesh);
+
+    // Portal ring
+    const ringGeometry = new THREE.RingGeometry(1.5, 1.8, 64);
+    const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, wireframe: true });
+    const portalRing = new THREE.Mesh(ringGeometry, ringMaterial);
+    portalRing.rotation.x = Math.PI / 2;
+    scene.add(portalRing);
+
+    // Stars
+    const stars = [];
+    const starGeometry = new THREE.SphereGeometry(0.01, 8, 8);
+    const starMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+    for (let i = 0; i < 200; i++) {
+      const star = new THREE.Mesh(starGeometry, starMaterial);
+      star.position.set(
+        (Math.random() - 0.5) * 30,
+        (Math.random() - 0.5) * 30,
+        (Math.random() - 0.5) * 30
+      );
+      scene.add(star);
+      stars.push(star);
     }
 
-    animate();
+    function animate(time) {
+      uniforms.uTime.value = time * 0.001;
+      portalRing.rotation.z += 0.005;
+      portalRing.rotation.y += 0.003;
 
-    // Handle resizing
+      stars.forEach(star => {
+        star.position.z += 0.02;
+        if (star.position.z > 15) star.position.z = -15;
+      });
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    document.getElementById('enter').addEventListener('click', () => {
+      const btn = document.getElementById('enter');
+      const login = document.getElementById('login-box');
+      const sound = document.getElementById('portal-sound');
+
+      btn.style.opacity = 0;
+      setTimeout(() => btn.style.display = 'none', 1000);
+
+      sound.play();
+      login.style.display = 'block';
+      animate();
+    });
+
     window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
 </body>
-</html>
+    </html>
