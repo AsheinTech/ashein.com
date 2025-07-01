@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asheinspace Portal</title>
+  <title>Cyberspace Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />  <style>
     body {
@@ -63,7 +63,7 @@
       const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(window.devicePixelRatio);
-      camera.position.z = 5;
+      camera.position.z = 10;
 
       const composer = new THREE.EffectComposer(renderer);
       const renderPass = new THREE.RenderPass(scene, camera);
@@ -71,9 +71,7 @@
 
       const bloomPass = new THREE.UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
-        1.5, // strength
-        0.4, // radius
-        0.85 // threshold
+        1.5, 0.4, 0.85
       );
       bloomPass.threshold = 0;
       bloomPass.strength = 2;
@@ -86,30 +84,43 @@
       light.position.set(0, 0, 5);
       scene.add(light);
 
-      const rings = [];
-      const ringCount = 50;
+      const webGroup = new THREE.Group();
 
-      for (let i = 0; i < ringCount; i++) {
-        const geometry = new THREE.TorusGeometry(2, 0.07, 16, 100);
-        const material = new THREE.MeshStandardMaterial({
+      const circleCount = 10;
+      const lineCount = 16;
+
+      for (let i = 1; i <= circleCount; i++) {
+        const geometry = new THREE.RingGeometry(i * 0.5 - 0.02, i * 0.5, 64);
+        const material = new THREE.MeshBasicMaterial({
           color: 0x00ffff,
-          emissive: 0x00ffff,
-          emissiveIntensity: 3,
-          metalness: 0.2,
-          roughness: 0.1
+          side: THREE.DoubleSide
         });
         const ring = new THREE.Mesh(geometry, material);
-        ring.position.z = -i * 1.5;
         ring.rotation.x = Math.PI / 2;
-        scene.add(ring);
-        rings.push(ring);
+        webGroup.add(ring);
       }
 
+      for (let i = 0; i < lineCount; i++) {
+        const angle = (i / lineCount) * Math.PI * 2;
+        const geometry = new THREE.BufferGeometry();
+        const vertices = new Float32Array([
+          0, 0, 0,
+          Math.cos(angle) * circleCount * 0.5,
+          0,
+          Math.sin(angle) * circleCount * 0.5
+        ]);
+        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        const material = new THREE.LineBasicMaterial({ color: 0x00ffff });
+        const line = new THREE.Line(geometry, material);
+        webGroup.add(line);
+      }
+
+      scene.add(webGroup);
+
       function animate() {
-        rings.forEach((ring) => {
-          ring.position.z += 0.2;
-          if (ring.position.z > 5) ring.position.z = -ringCount * 1.5;
-        });
+        webGroup.rotation.z += 0.0025;
+        webGroup.position.z += 0.2;
+        if (webGroup.position.z > 5) webGroup.position.z = -30;
         composer.render();
         requestAnimationFrame(animate);
       }
@@ -138,7 +149,7 @@
     });
   </script></head>
 <body>
-  <div id="enter">ENTER Ashein PORTAL</div>
+  <div id="enter">ENTER THE PORTAL</div>
   <div id="loader" style="display:none;"></div>
   <audio id="portal-sound" preload="auto">
     <source src="Dean_Lewis_-_With_You.mp3" type="audio/mpeg">
@@ -148,4 +159,4 @@
   </audio>
   <canvas id="bg"></canvas>
 </body>
-</html
+  </html>
