@@ -4,58 +4,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cyberspace Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />  <style>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <style>
     body {
       margin: 0;
       overflow: hidden;
       background: black;
-    }
+    }#enter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px 40px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid cyan;
+  color: cyan;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+  letter-spacing: 2px;
+  transition: opacity 1s ease;
+}
 
-    #enter {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 20px 40px;
-      background: rgba(0, 255, 255, 0.1);
-      border: 2px solid cyan;
-      color: cyan;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.5rem;
-      cursor: pointer;
-      z-index: 10;
-      text-shadow: 0 0 5px cyan, 0 0 10px cyan;
-      letter-spacing: 2px;
-      transition: opacity 1s ease;
-    }
+#loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border: 8px solid rgba(0, 255, 255, 0.2);
+  border-top: 8px solid cyan;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+  z-index: 9;
+}
 
-    #loader {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 100px;
-      height: 100px;
-      border: 8px solid rgba(0, 255, 255, 0.2);
-      border-top: 8px solid cyan;
-      border-radius: 50%;
-      animation: spin 2s linear infinite;
-      z-index: 9;
-    }
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
 
-    @keyframes spin {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
+canvas {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
 
-    canvas {
-      display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 0;
-    }
-  </style>  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js" defer></script>  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/postprocessing/EffectComposer.js" defer></script>  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/postprocessing/RenderPass.js" defer></script>  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/postprocessing/UnrealBloomPass.js" defer></script>  <script defer>
+  </style>  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.js';
+    import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+
     window.addEventListener("DOMContentLoaded", () => {
       const canvas = document.getElementById('bg');
       const scene = new THREE.Scene();
@@ -65,11 +70,11 @@
       renderer.setPixelRatio(window.devicePixelRatio);
       camera.position.z = 10;
 
-      const composer = new THREE.EffectComposer(renderer);
-      const renderPass = new THREE.RenderPass(scene, camera);
+      const composer = new EffectComposer(renderer);
+      const renderPass = new RenderPass(scene, camera);
       composer.addPass(renderPass);
 
-      const bloomPass = new THREE.UnrealBloomPass(
+      const bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
         1.5, 0.4, 0.85
       );
@@ -85,16 +90,12 @@
       scene.add(light);
 
       const webGroup = new THREE.Group();
-
       const circleCount = 10;
       const lineCount = 16;
 
       for (let i = 1; i <= circleCount; i++) {
         const geometry = new THREE.RingGeometry(i * 0.5 - 0.02, i * 0.5, 64);
-        const material = new THREE.MeshBasicMaterial({
-          color: 0x00ffff,
-          side: THREE.DoubleSide
-        });
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
         const ring = new THREE.Mesh(geometry, material);
         ring.rotation.x = Math.PI / 2;
         webGroup.add(ring);
@@ -105,9 +106,7 @@
         const geometry = new THREE.BufferGeometry();
         const vertices = new Float32Array([
           0, 0, 0,
-          Math.cos(angle) * circleCount * 0.5,
-          0,
-          Math.sin(angle) * circleCount * 0.5
+          Math.cos(angle) * circleCount * 0.5, 0, Math.sin(angle) * circleCount * 0.5
         ]);
         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
         const material = new THREE.LineBasicMaterial({ color: 0x00ffff });
@@ -159,4 +158,4 @@
   </audio>
   <canvas id="bg"></canvas>
 </body>
-  </html>
+</html>
