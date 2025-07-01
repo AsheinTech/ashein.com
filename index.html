@@ -117,7 +117,12 @@
 
 <body>
   <div id="enter">ENTER THE PORTAL</div>
-  <audio id="portal-sound" src="https://assets.mixkit.co/sfx/download/mixkit-arcade-retro-game-over-213.wav" preload="auto"></audio>
+  <audio id="portal-sound" preload="auto">
+  <source src="sound.mp3" type="audio/mpeg">
+  <source src="sound.ogg" type="audio/ogg">
+  <source src="sound.wav" type="audio/wav">
+  Your browser does not support the audio tag.
+  </audio>
   <canvas id="bg"></canvas>
 </body>
   </html>
