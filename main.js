@@ -1,7 +1,7 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.js';
-import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import * as THREE from 'https://asheintech.github.io/ashein.com/js/three.module.js';
+import { EffectComposer } from 'https://asheintech.github.io/ashein.com/js/EffectComposer.js';
+import { RenderPass } from 'https://asheintech.github.io/ashein.com/js/RenderPass.js';
+import { UnrealBloomPass } from 'https://asheintech.github.io/ashein.com/js/UnrealBloomPass.js';
 
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById('bg');
@@ -12,6 +12,7 @@ window.addEventListener("DOMContentLoaded", () => {
   renderer.setPixelRatio(window.devicePixelRatio);
   camera.position.z = 10;
 
+  // Bloom effect
   const composer = new EffectComposer(renderer);
   const renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
@@ -31,6 +32,7 @@ window.addEventListener("DOMContentLoaded", () => {
   light.position.set(0, 0, 5);
   scene.add(light);
 
+  // Portal web group
   const webGroup = new THREE.Group();
   const circleCount = 10;
   const lineCount = 16;
@@ -58,6 +60,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   scene.add(webGroup);
 
+  // Animate
   function animate() {
     webGroup.rotation.z += 0.0025;
     webGroup.position.z += 0.2;
@@ -66,6 +69,7 @@ window.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(animate);
   }
 
+  // Interactivity
   const enterBtn = document.getElementById('enter');
   const sound = document.getElementById('portal-sound');
   const loader = document.getElementById('loader');
@@ -73,14 +77,21 @@ window.addEventListener("DOMContentLoaded", () => {
   enterBtn.addEventListener('click', () => {
     enterBtn.style.opacity = 0;
     loader.style.display = 'block';
+
     setTimeout(() => {
       enterBtn.style.display = 'none';
       loader.style.display = 'none';
-      sound.play();
+
+      // 🔊 Safe audio autoplay
+      sound.play().catch(() => {
+        console.warn("Audio autoplay blocked, continuing without sound.");
+      });
+
       animate();
     }, 2000);
   });
 
+  // Resize support
   window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
