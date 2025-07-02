@@ -1,101 +1,116 @@
 import * as THREE from './js/three.module.js';
-import { FontLoader } from './js/FontLoader.js';
-import { TextGeometry } from './js/TextGeometry.js';
+import { FontLoader }    from './js/FontLoader.js';
+import { TextGeometry }  from './js/TextGeometry.js';
 import { EffectComposer } from './js/EffectComposer.js';
-import { RenderPass } from './js/RenderPass.js';
+import { RenderPass }     from './js/RenderPass.js';
 import { UnrealBloomPass } from './js/UnrealBloomPass.js';
 
 window.addEventListener("DOMContentLoaded", () => {
-  const canvas = document.getElementById('bg');
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+  // ——— SCENE & RENDERER ——————————————————————————
+  const canvas   = document.getElementById('bg');
+  const scene    = new THREE.Scene();
+  const camera   = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 100);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(devicePixelRatio);
   camera.position.z = 0;
 
+  // ——— COMPOSER + BLOOM ——————————————————————————
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
+  const bloom = new UnrealBloomPass(
+    new THREE.Vector2(innerWidth, innerHeight),
     1.5, 0.4, 0.85
   );
-  bloomPass.threshold = 0;
-  bloomPass.strength = 2;
-  bloomPass.radius = 0.8;
-  composer.addPass(bloomPass);
+  bloom.threshold = 0;
+  bloom.strength  = 2;
+  bloom.radius    = 0.8;
+  composer.addPass(bloom);
 
+  // ——— TUNNEL CURVE + MESH ————————————————————————
   const curve = new THREE.CatmullRomCurve3(
-    Array.from({ length: 100 }, (_, i) =>
+    Array.from({ length: 200 }, (_, i) =>
       new THREE.Vector3(
-        Math.sin(i * 0.3) * 2,
-        Math.cos(i * 0.3) * 2,
-        -i * 2
+        Math.sin(i * 0.2) * 2,
+        Math.cos(i * 0.2) * 2,
+        -i * 1.5
       )
     )
   );
-
-  const geometry = new THREE.TubeGeometry(curve, 300, 1.2, 32, false);
-  const material = new THREE.MeshBasicMaterial({
+  const tubeGeo = new THREE.TubeGeometry(curve, 600, 1.2, 24, false);
+  const tubeMat = new THREE.MeshBasicMaterial({
     color: 0x00ffff,
     wireframe: true
   });
-  const tube = new THREE.Mesh(geometry, material);
-  scene.add(tube);
+  scene.add(new THREE.Mesh(tubeGeo, tubeMat));
 
-  // Add glowing "Ashein Technologies"
-  const loader = new FontLoader();
-  loader.load('./fonts/helvetiker_regular.typeface.json', (font) => {
-    const textGeo = new TextGeometry('Ashein Technologies', {
-      font: font,
-      size: 1,
-      height: 0.2
-    });
+  // ——— 3D TEXT —————————————————————————————————————
+  new FontLoader().load(
+    'https://asheintech.github.io/ashein.com/fonts/helvetiker_regular.typeface.json',
+    (font) => {
+      const txtGeo = new TextGeometry('Ashein Technologies', {
+        font, size: 0.8, height: 0.2, curveSegments:12
+      });
+      txtGeo.center();
+      const txtMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+      const txtMesh = new THREE.Mesh(txtGeo, txtMat);
+      txtMesh.position.z = -10; // sit a bit ahead
+      scene.add(txtMesh);
+    }
+  );
 
-    const textMat = new THREE.MeshBasicMaterial({
-      color: 0x00ffff,
-      wireframe: true
-    });
+  // ——— INTERACTION STATE —————————————————————————
+  let t      = 0;
+  const speed = 0.005;          // slower steady speed
+  const mouse = new THREE.Vector2();
+  const targetCam = new THREE.Vector2();
 
-    const textMesh = new THREE.Mesh(textGeo, textMat);
-    textMesh.position.set(-8, 0, -5);
-    scene.add(textMesh);
+  window.addEventListener('mousemove', (e) => {
+    // map mouse to -0.5..0.5
+    mouse.x = (e.clientX / innerWidth)  - 0.5;
+    mouse.y = (e.clientY / innerHeight) - 0.5;
   });
 
-  let progress = 0;
-  let speed = 0.05;
-
+  // ——— ANIMATION LOOP ——————————————————————————
   function animate() {
-    progress += speed;
-    const point = curve.getPointAt((progress % 1));
-    const tangent = curve.getTangentAt((progress % 1));
+    // advance along curve
+    t = (t + speed) % 1;
+    const pos = curve.getPointAt(t);
+    const tan = curve.getTangentAt(t);
 
-    camera.position.copy(point);
-    camera.lookAt(point.clone().add(tangent));
+    // smooth mouse interpolation
+    targetCam.lerp(mouse, 0.05);
+
+    camera.position.copy(pos);
+    camera.position.x += targetCam.x * 2;  // gentle horizontal drift
+    camera.position.y += targetCam.y * 2;  // gentle vertical drift
+    camera.lookAt(pos.clone().add(tan));
 
     composer.render();
     requestAnimationFrame(animate);
   }
 
+  // ——— UI INTERACTION ——————————————————————————
   const enterBtn = document.getElementById('enter');
-  const sound = document.getElementById('portal-sound');
-  const loaderDiv = document.getElementById('loader');
+  const loader   = document.getElementById('loader');
+  const sound    = document.getElementById('portal-sound');
 
   enterBtn.addEventListener('click', () => {
-    enterBtn.style.opacity = 0;
-    loaderDiv.style.display = 'block';
+    enterBtn.style.opacity         = 0;
+    loader.style.display           = 'block';
     setTimeout(() => {
-      enterBtn.style.display = 'none';
-      loaderDiv.style.display = 'none';
+      enterBtn.style.display       = 'none';
+      loader.style.display         = 'none';
       sound.play().catch(() => {});
       animate();
     }, 1500);
   });
 
-  window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
+  // ——— RESIZE HANDLER ——————————————————————————
+  window.addEventListener("resize", () => {
+    renderer.setSize(innerWidth, innerHeight);
+    composer.setSize(innerWidth, innerHeight);
+    camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
   });
 });
