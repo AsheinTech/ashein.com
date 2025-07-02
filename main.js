@@ -61,7 +61,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ——— INTERACTION STATE —————————————————————————
   let t      = 0;
-  const speed = 0.005;          // slower steady speed
+  const speed = 0.05;          // slower steady speed
   const mouse = new THREE.Vector2();
   const targetCam = new THREE.Vector2();
 
