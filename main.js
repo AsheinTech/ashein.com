@@ -12,92 +12,82 @@ window.addEventListener("DOMContentLoaded", () => {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
-  camera.position.z = 0;
+  camera.position.z = 2;
 
+  // Composer with Bloom
   const composer = new EffectComposer(renderer);
-  const renderPass = new RenderPass(scene, camera);
-  composer.addPass(renderPass);
-
-  const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.5, 0.4, 0.85
-  );
+  composer.addPass(new RenderPass(scene, camera));
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
   bloomPass.threshold = 0;
   bloomPass.strength = 2;
   bloomPass.radius = 0.8;
   composer.addPass(bloomPass);
 
-  const light = new THREE.PointLight(0x00ffff, 2, 100);
-  light.position.set(0, 0, 5);
-  scene.add(light);
-
-  // Tunnel curve and geometry
-  const curve = new THREE.CatmullRomCurve3(
-    Array.from({ length: 100 }, (_, i) => new THREE.Vector3(
-      Math.sin(i * 0.1) * 2,
-      Math.cos(i * 0.1) * 2,
-      -i * 1.5
-    ))
+  const curvePath = new THREE.CatmullRomCurve3(
+    Array.from({ length: 100 }, (_, i) => new THREE.Vector3(Math.sin(i * 0.3) * 2, Math.cos(i * 0.3) * 2, -i))
   );
-  const geometry = new THREE.TubeGeometry(curve, 300, 0.8, 12, false);
+
+  const geometry = new THREE.TubeGeometry(curvePath, 1000, 1, 16, false);
   const material = new THREE.MeshStandardMaterial({
     color: 0x00ffff,
+    emissive: 0x0033ff,
     wireframe: true,
-    emissive: 0x0077ff,
-    emissiveIntensity: 1
   });
-  const tubeMesh = new THREE.Mesh(geometry, material);
 
-  const tunnelGroup = new THREE.Group();
-  tunnelGroup.add(tubeMesh);
-  scene.add(tunnelGroup);
+  const tunnel = new THREE.Mesh(geometry, material);
+  scene.add(tunnel);
 
-  // Add text inside tunnel
-  const fontLoader = new FontLoader();
-  fontLoader.load('https://threejs.org/examples/fonts/helvetiker_bold.typeface.json', (font) => {
-    const textGeo = new TextGeometry('Ashein Technologies', {
+  const pointLight = new THREE.PointLight(0x00ffff, 1);
+  pointLight.position.set(0, 0, 0);
+  scene.add(pointLight);
+
+  // Title
+  const loader = new FontLoader();
+  loader.load('./fonts/helvetiker_regular.typeface.json', function (font) {
+    const textGeo = new TextGeometry("Ashein Technologies", {
       font: font,
-      size: 0.8,
-      height: 0.2,
-      curveSegments: 12,
-      bevelEnabled: true,
-      bevelThickness: 0.05,
-      bevelSize: 0.03,
-      bevelSegments: 3
+      size: 0.6,
+      height: 0.05,
     });
-    const textMat = new THREE.MeshStandardMaterial({
-      color: 0x00ffff,
-      emissive: 0x0099ff,
-      emissiveIntensity: 1.5
-    });
-    const textMesh = new THREE.Mesh(textGeo, textMat);
-    textGeo.center();
-    textMesh.position.set(0, 1.5, 0);
-    tunnelGroup.add(textMesh);
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+    const textMesh = new THREE.Mesh(textGeo, textMaterial);
+    textMesh.position.set(-4, 0, 0);
+    scene.add(textMesh);
+  });
+
+  // Mouse move interaction
+  const mouse = new THREE.Vector2();
+  window.addEventListener("mousemove", (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
   });
 
   function animate() {
-    camera.position.z -= 0.2;
-    composer.render();
     requestAnimationFrame(animate);
+    camera.position.z -= 0.2;
+    if (camera.position.z < -95) camera.position.z = 2; // Loop back
+    camera.position.x = mouse.x * 2;
+    camera.position.y = mouse.y * 2;
+    composer.render();
   }
 
+  // Start after clicking Enter
   const enterBtn = document.getElementById('enter');
   const sound = document.getElementById('portal-sound');
-  const loader = document.getElementById('loader');
+  const loaderDiv = document.getElementById('loader');
 
   enterBtn.addEventListener('click', () => {
     enterBtn.style.opacity = 0;
-    loader.style.display = 'block';
+    loaderDiv.style.display = 'block';
     setTimeout(() => {
       enterBtn.style.display = 'none';
-      loader.style.display = 'none';
+      loaderDiv.style.display = 'none';
       sound.play().catch(() => console.warn("Audio autoplay blocked."));
       animate();
     }, 2000);
   });
 
-  window.addEventListener('resize', () => {
+  window.addEventListener("resize", () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
