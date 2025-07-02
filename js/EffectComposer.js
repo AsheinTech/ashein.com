@@ -2,7 +2,7 @@ import {
 	Clock,
 	Vector2,
 	WebGLRenderTarget
-} from 'three';
+} from './three.module.js'; // ✅ Correct for GitHub Pages or raw browser module usage
 import { CopyShader } from '../shaders/CopyShader.js';
 import { ShaderPass } from './ShaderPass.js';
 import { MaskPass } from './MaskPass.js';
