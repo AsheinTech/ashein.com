@@ -65,10 +65,11 @@ window.addEventListener("DOMContentLoaded", () => {
     scene.add(textMesh);
   });
 
-  
+  // ---- PROGRESS & SPEED ADJUSTMENT----
   let progress = 0;
   let speed = 0.005;
 
+  //---- ANIMATION LOOP ------
   function animate() {
     progress += speed;
     const point = curve.getPointAt((progress % 1));
@@ -85,6 +86,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const sound = document.getElementById('portal-sound');
   const loaderDiv = document.getElementById('loader');
 
+  // ----- UI INTERACTION ————-—
   enterBtn.addEventListener('click', () => {
     enterBtn.style.opacity = 0;
     loaderDiv.style.display = 'block';
@@ -96,6 +98,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }, 1500);
   });
 
+  // ----- RESIZE HANDLER -----
   window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
