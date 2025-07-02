@@ -1,7 +1,7 @@
-import * as THREE from './js/three.module.js';
-import { EffectComposer } from './js/EffectComposer.js';
-import { RenderPass } from './js/RenderPass.js';
-import { UnrealBloomPass } from './js/UnrealBloomPass.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.js';
+import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById('bg');
@@ -87,4 +87,4 @@ window.addEventListener("DOMContentLoaded", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
   });
-})
+});
