@@ -6,6 +6,7 @@ import { RenderPass } from './js/RenderPass.js';
 import { UnrealBloomPass } from './js/UnrealBloomPass.js';
 
 window.addEventListener("DOMContentLoaded", () => {
+  //------ SCENE & RENDER
   const canvas = document.getElementById('bg');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -14,6 +15,7 @@ window.addEventListener("DOMContentLoaded", () => {
   renderer.setPixelRatio(window.devicePixelRatio);
   camera.position.z = 0;
 
+  //——-- COMPOSER & BLOOM -->
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const bloomPass = new UnrealBloomPass(
@@ -25,6 +27,7 @@ window.addEventListener("DOMContentLoaded", () => {
   bloomPass.radius = 0.8;
   composer.addPass(bloomPass);
 
+  // ---- TUNNEL CURVE + MESH
   const curve = new THREE.CatmullRomCurve3(
     Array.from({ length: 100 }, (_, i) =>
       new THREE.Vector3(
@@ -62,8 +65,9 @@ window.addEventListener("DOMContentLoaded", () => {
     scene.add(textMesh);
   });
 
+  
   let progress = 0;
-  let speed = 0.05;
+  let speed = 0.005;
 
   function animate() {
     progress += speed;
