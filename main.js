@@ -1,7 +1,7 @@
-import * as THREE from "../ashein.com/js/three.module.js";
-import { EffectComposer } from "../ashein.com/js/EffectComposer.js";
-import { RenderPass } from "../ashein.com/js/RenderPass.js";
-import { UnrealBloomPass } from "../ashein.com/js/UnrealBloomPass.js";
+import * as THREE from "/ashein.com/js/three.module.js";
+import { EffectComposer } from "/ashein.com/js/EffectComposer.js";
+import { RenderPass } from "/ashein.com/js/RenderPass.js";
+import { UnrealBloomPass } from "/ashein.com/js/UnrealBloomPass.js";
 
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById('bg');
