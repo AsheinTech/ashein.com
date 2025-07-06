@@ -33,7 +33,7 @@ window.addEventListener("DOMContentLoaded", () => {
   composer.addPass(bloomPass);
 
   // ---- TUNNEL CURVE + MESH
-  const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+  const geometry = new THREE.CylinderGeometry(10, 10, 100, 64);
   const material = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 }
@@ -47,12 +47,26 @@ window.addEventListener("DOMContentLoaded", () => {
     `,
     fragmentShader: `
       void main() {
-        gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
+        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);              
+      }
+    `// Royal blue
       }
     `
   });
   const tunnel = new THREE.Mesh(geometry, material);
+  tunnel.rotation.x = Math.PI / 2;
   scene.add(tunnel);
+
+  // Add background stars
+  const starGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+  const starMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue
+  for (let i = 0; i < 100; i++) {
+    const star = new THREE.Mesh(starGeometry, starMaterial);
+    star.position.x = Math.random() * 20 - 10;
+    star.position.y = Math.random() * 20 - 10;
+    star.position.z = Math.random() * 20 - 10;
+    scene.add(star);
+  }
 
   // Add glowing "Ashein Technologies"
   const loader = new FontLoader();
@@ -62,10 +76,7 @@ window.addEventListener("DOMContentLoaded", () => {
       size: 1,
       height: 0.2
     });
-    const textMat = new THREE.MeshBasicMaterial({
-      color: 0x00ffff,
-      wireframe: true
-    });
+    const textMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
     const textMesh = new THREE.Mesh(textGeo, textMat);
     textMesh.position.set(-8, 0, -5);
     scene.add(textMesh);
@@ -103,7 +114,4 @@ window.addEventListener("DOMContentLoaded", () => {
   window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-  });
-});
+    camera
