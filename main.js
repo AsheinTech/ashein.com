@@ -10,7 +10,10 @@ window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById('bg');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
   camera.position.z = 0;
@@ -20,7 +23,9 @@ window.addEventListener("DOMContentLoaded", () => {
   composer.addPass(new RenderPass(scene, camera));
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.5, 0.4, 0.85
+    1.5,
+    0.4,
+    0.85
   );
   bloomPass.threshold = 0;
   bloomPass.strength = 2;
@@ -28,23 +33,26 @@ window.addEventListener("DOMContentLoaded", () => {
   composer.addPass(bloomPass);
 
   // ---- TUNNEL CURVE + MESH
-  const curve = new THREE.CatmullRomCurve3(
-    Array.from({ length: 100 }, (_, i) =>
-      new THREE.Vector3(
-        Math.sin(i * 0.3) * 2,
-        Math.cos(i * 0.3) * 2,
-        -i * 2
-      )
-    )
-  );
-
-  const geometry = new THREE.TubeGeometry(curve, 300, 1.2, 32, false);
-  const material = new THREE.MeshBasicMaterial({
-    color: 0x00ffff,
-    wireframe: true
+  const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      time: { value: 0 }
+    },
+    vertexShader: `
+      void main() {
+        vec3 pos = position;
+        pos.z += sin(pos.x * 0.1 + time) * 0.1;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+      }
+    `,
+    fragmentShader: `
+      void main() {
+        gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
+      }
+    `
   });
-  const tube = new THREE.Mesh(geometry, material);
-  scene.add(tube);
+  const tunnel = new THREE.Mesh(geometry, material);
+  scene.add(tunnel);
 
   // Add glowing "Ashein Technologies"
   const loader = new FontLoader();
@@ -54,12 +62,10 @@ window.addEventListener("DOMContentLoaded", () => {
       size: 1,
       height: 0.2
     });
-
     const textMat = new THREE.MeshBasicMaterial({
       color: 0x00ffff,
       wireframe: true
     });
-
     const textMesh = new THREE.Mesh(textGeo, textMat);
     textMesh.position.set(-8, 0, -5);
     scene.add(textMesh);
@@ -72,12 +78,7 @@ window.addEventListener("DOMContentLoaded", () => {
   //---- ANIMATION LOOP ------
   function animate() {
     progress += speed;
-    const point = curve.getPointAt((progress % 1));
-    const tangent = curve.getTangentAt((progress % 1));
-
-    camera.position.copy(point);
-    camera.lookAt(point.clone().add(tangent));
-
+    material.uniforms.time.value = progress;
     composer.render();
     requestAnimationFrame(animate);
   }
