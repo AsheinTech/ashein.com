@@ -68,7 +68,7 @@ window.addEventListener("DOMContentLoaded", () => {
     scene.add(star);
   }
 
-  // Add glowing "Ashein Technologies"
+  // Add glowing Ashein Technologies
   const loader = new FontLoader();
   loader.load('./fonts/helvetiker_regular.typeface.json', (font) => {
     const textGeo = new TextGeometry('Ashein Technologies', {
