@@ -72,8 +72,8 @@ window.addEventListener("DOMContentLoaded", () => {
   //---- ANIMATION LOOP ------
   function animate() {
     progress += speed;
-    const point = curve.getPointAt((progress % 2));
-    const tangent = curve.getTangentAt((progress % 2));
+    const point = curve.getPointAt((progress % 1));
+    const tangent = curve.getTangentAt((progress % 1));
 
     camera.position.copy(point);
     camera.lookAt(point.clone().add(tangent));
