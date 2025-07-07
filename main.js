@@ -1,87 +1,115 @@
 import * as THREE from './js/three.module.js';
-import { OrbitControls } from './js/OrbitControls.js';
+import { FontLoader } from './js/FontLoader.js';
+import { TextGeometry } from './js/TextGeometry.js';
 import { EffectComposer } from './js/EffectComposer.js';
 import { RenderPass } from './js/RenderPass.js';
 import { UnrealBloomPass } from './js/UnrealBloomPass.js';
-import { FontLoader } from './js/FontLoader.js';
-import { TextGeometry } from './js/TextGeometry.js';
+import { OrbitControls } from './js/OrbitControls.js';
 
 window.addEventListener("DOMContentLoaded", () => {
+  // ------ SCENE & RENDERER ------
   const canvas = document.getElementById('bg');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
-  camera.position.z = 5;
+  camera.position.z = 0;
 
+  // ------ ORBIT CONTROLS ------
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.enableZoom = false;
+  controls.enablePan = false;
+
+  // ------ COMPOSER & BLOOM ------
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    1.5, 0.4, 0.85
+  );
   bloomPass.threshold = 0;
   bloomPass.strength = 2;
-  bloomPass.radius = 1.5;
+  bloomPass.radius = 0.8;
   composer.addPass(bloomPass);
 
-  scene.fog = new THREE.FogExp2(0x000000, 0.035);
-
-  const starsGeometry = new THREE.BufferGeometry();
-  const starVertices = [];
-  for (let i = 0; i < 10000; i++) {
-    const x = THREE.MathUtils.randFloatSpread(200);
-    const y = THREE.MathUtils.randFloatSpread(200);
-    const z = THREE.MathUtils.randFloatSpread(200);
-    starVertices.push(x, y, z);
-  }
-  starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-  const starsMaterial = new THREE.PointsMaterial({ color: 0x88ccff });
-  const starField = new THREE.Points(starsGeometry, starsMaterial);
-  scene.add(starField);
-
+  // ------ CURVE + TUNNEL ------
   const curve = new THREE.CatmullRomCurve3(
-    Array.from({ length: 100 }, (_, i) => new THREE.Vector3(
-      Math.sin(i * 0.3) * 5,
-      Math.cos(i * 0.3) * 5,
-      -i * 3
-    ))
+    Array.from({ length: 100 }, (_, i) =>
+      new THREE.Vector3(
+        Math.sin(i * 0.3) * 2,
+        Math.cos(i * 0.3) * 2,
+        -i * 2
+      )
+    )
   );
-  const geometry = new THREE.TubeGeometry(curve, 200, 1, 64, false);
-  const material = new THREE.MeshStandardMaterial({
+
+  const geometry = new THREE.TubeGeometry(curve, 300, 1.2, 32, false);
+  const material = new THREE.MeshBasicMaterial({
     color: 0x00ffff,
-    wireframe: true,
-    emissive: 0x0044ff,
-    emissiveIntensity: 1
+    wireframe: true
   });
-  const tunnel = new THREE.Mesh(geometry, material);
-  scene.add(tunnel);
+  const tube = new THREE.Mesh(geometry, material);
+  scene.add(tube);
 
-  const pointLight = new THREE.PointLight(0x00ffff, 1);
-  pointLight.position.set(0, 0, 10);
-  scene.add(pointLight);
-
-  const fontLoader = new FontLoader();
-  fontLoader.load('./fonts/helvetiker_regular.typeface.json', font => {
-    const textGeometry = new TextGeometry('Ashein Technologies', {
-      font,
-      size: 0.6,
-      height: 0.1,
+  // ------ 3D TEXT ------
+  const loader = new FontLoader();
+  loader.load('./fonts/helvetiker_regular.typeface.json', (font) => {
+    const textGeo = new TextGeometry('Ashein Technologies', {
+      font: font,
+      size: 1,
+      height: 0.2
     });
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.set(5, 5, 0);
+
+    const textMat = new THREE.MeshBasicMaterial({
+      color: 0x00ffff,
+      wireframe: true
+    });
+
+    const textMesh = new THREE.Mesh(textGeo, textMat);
+    textMesh.position.set(5, 5, -10);
     scene.add(textMesh);
   });
 
-  const clock = new THREE.Clock();
+  // ------ ANIMATION STATE ------
+  let progress = 0;
+  let speed = 0.01;
+
+  // ------ ANIMATION LOOP ------
   function animate() {
-    const t = clock.getElapsedTime() * 10;  // Speed control here
-    camera.position.z = t;
-    camera.lookAt(new THREE.Vector3(0, 0, t - 10));
+    progress += speed;
+    const point = curve.getPointAt(progress % 1);
+    const tangent = curve.getTangentAt(progress % 1);
+
+    camera.position.copy(point);
+    camera.lookAt(point.clone().add(tangent));
+    controls.update(); // Ensure smooth interaction
+
     composer.render();
     requestAnimationFrame(animate);
   }
-  animate();
 
+  // ------ UI INTERACTION ------
+  const enterBtn = document.getElementById('enter');
+  const sound = document.getElementById('portal-sound');
+  const loaderDiv = document.getElementById('loader');
+
+  enterBtn.addEventListener('click', () => {
+    enterBtn.style.opacity = 0;
+    loaderDiv.style.display = 'block';
+
+    setTimeout(() => {
+      enterBtn.style.display = 'none';
+      loaderDiv.style.display = 'none';
+      sound.play().catch(() => {});
+      animate();
+    }, 1500);
+  });
+
+  // ------ RESIZE HANDLER ------
   window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
