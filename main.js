@@ -10,10 +10,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById('bg');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true
-  });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
   camera.position.z = 0;
@@ -23,9 +20,7 @@ window.addEventListener("DOMContentLoaded", () => {
   composer.addPass(new RenderPass(scene, camera));
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.5,
-    0.4,
-    0.85
+    1.5, 0.4, 0.85
   );
   bloomPass.threshold = 0;
   bloomPass.strength = 2;
@@ -33,42 +28,25 @@ window.addEventListener("DOMContentLoaded", () => {
   composer.addPass(bloomPass);
 
   // ---- TUNNEL CURVE + MESH
-  const geometry = new THREE.CylinderGeometry(10, 10, 100, 64);
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      time: { value: 0 }
-    },
-    vertexShader: `
-      void main() {
-        vec3 pos = position;
-        pos.z += sin(pos.x * 0.1 + time) * 0.1;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-      }
-    `,
-    fragmentShader: `
-      void main() {
-        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);              
-      }
-    `// Royal blue
-      }
-    `
+  const curve = new THREE.CatmullRomCurve3(
+    Array.from({ length: 100 }, (_, i) =>
+      new THREE.Vector3(
+        Math.sin(i * 0.3) * 2,
+        Math.cos(i * 0.3) * 2,
+        -i * 2
+      )
+    )
+  );
+
+  const geometry = new THREE.TubeGeometry(curve, 300, 1.2, 32, false);
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x00ffff,
+    wireframe: true
   });
-  const tunnel = new THREE.Mesh(geometry, material);
-  tunnel.rotation.x = Math.PI / 2;
-  scene.add(tunnel);
+  const tube = new THREE.Mesh(geometry, material);
+  scene.add(tube);
 
-  // Add background stars
-  const starGeometry = new THREE.SphereGeometry(0.1, 16, 16);
-  const starMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue
-  for (let i = 0; i < 100; i++) {
-    const star = new THREE.Mesh(starGeometry, starMaterial);
-    star.position.x = Math.random() * 20 - 10;
-    star.position.y = Math.random() * 20 - 10;
-    star.position.z = Math.random() * 20 - 10;
-    scene.add(star);
-  }
-
-  // Add glowing Ashein Technologies
+  // Add glowing "Ashein Technologies"
   const loader = new FontLoader();
   loader.load('./fonts/helvetiker_regular.typeface.json', (font) => {
     const textGeo = new TextGeometry('Ashein Technologies', {
@@ -76,7 +54,12 @@ window.addEventListener("DOMContentLoaded", () => {
       size: 1,
       height: 0.2
     });
-    const textMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+
+    const textMat = new THREE.MeshBasicMaterial({
+      color: 0x00ffff,
+      wireframe: true
+    });
+
     const textMesh = new THREE.Mesh(textGeo, textMat);
     textMesh.position.set(-8, 0, -5);
     scene.add(textMesh);
@@ -84,12 +67,17 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ---- PROGRESS & SPEED ADJUSTMENT----
   let progress = 0;
-  let speed = 0.009;
+  let speed = 0.015;
 
   //---- ANIMATION LOOP ------
   function animate() {
     progress += speed;
-    material.uniforms.time.value = progress;
+    const point = curve.getPointAt((progress % 2));
+    const tangent = curve.getTangentAt((progress % 2));
+
+    camera.position.copy(point);
+    camera.lookAt(point.clone().add(tangent));
+
     composer.render();
     requestAnimationFrame(animate);
   }
