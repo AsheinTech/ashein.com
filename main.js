@@ -66,7 +66,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---- PROGRESS & SPEED ADJUSTMENT----
-  let progress = 0;
+  let progress = 1;
   let speed = 0.015;
 
   //---- ANIMATION LOOP ------
