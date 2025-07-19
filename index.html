@@ -2,38 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ashein Galactic Tunnel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>3D Cosmic Portal</title>
   <style>
-    body { margin: 0; overflow: hidden; background: black; }
-    #enter {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 20px 40px; border: 2px solid cyan;
-      color: cyan; font-size: 1.5rem; font-family: Orbitron;
-      cursor: pointer; z-index: 10;
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      overflow: hidden;
     }
-    #loader {
-      display: none; position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 100px; height: 100px;
-      border: 8px solid rgba(0,255,255,0.2);
-      border-top: 8px solid cyan;
-      border-radius: 50%; animation: spin 2s linear infinite;
-      z-index: 9;
+
+    canvas {
+      display: block;
     }
-    @keyframes spin { 0% {transform:rotate(0);} 100% {transform:rotate(360deg);} }
-    canvas { display: block; }
+
+    #starfield {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: radial-gradient(circle at center, #001022 0%, #000000 100%);
+      animation: starMove 30s linear infinite;
+    }
+
+    @keyframes starMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 1000px 1000px; }
+    }
   </style>
 </head>
 <body>
-  <canvas id="bg"></canvas>
-  <div id="enter">ENTER THE PORTAL</div>
-  <div id="loader"></div>
-  <audio id="portal-sound" preload="auto">
-    <source src="Dean_Lewis_-_With_You.mp3" type="audio/mpeg">
-  </audio>
-  <script type="module" src="main.js"></script>
+  <canvas id="portal"></canvas>
+  <div id="starfield"></div>
+
+  <script>
+    const canvas = document.getElementById('portal');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const rings = [];
+    const maxRings = 50;
+
+    for (let i = 0; i < maxRings; i++) {
+      rings.push({
+        radius: i * 10,
+        speed: 0.6 + i * 0.01,
+        alpha: 1 - i / maxRings
+      });
+    }
+
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.translate(w / 2, h / 2);
+
+      for (let i = 0; i < rings.length; i++) {
+        const ring = rings[i];
+        ring.radius += ring.speed;
+        if (ring.radius > w) {
+          ring.radius = 0;
+        }
+
+        ctx.beginPath();
+        ctx.arc(0, 0, ring.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 153, 255, ${ring.alpha})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
 </body>
 </html>
